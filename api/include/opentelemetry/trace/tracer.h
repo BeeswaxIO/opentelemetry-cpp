@@ -39,7 +39,8 @@ public:
   virtual nostd::shared_ptr<Span> StartSpan(nostd::string_view name,
                                             const common::KeyValueIterable &attributes,
                                             const SpanContextKeyValueIterable &links,
-                                            const StartSpanOptions &options = {}) noexcept = 0;
+                                            const StartSpanOptions &options = {},
+					    std::string* log=nullptr) noexcept = 0;
 
   nostd::shared_ptr<Span> StartSpan(nostd::string_view name,
                                     const StartSpanOptions &options = {}) noexcept

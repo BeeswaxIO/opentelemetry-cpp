@@ -79,7 +79,7 @@ public:
       trace_api::SpanKind span_kind,
       const opentelemetry::common::KeyValueIterable &attributes,
       const trace_api::SpanContextKeyValueIterable &links,
-      bool log = false) noexcept = 0;
+      std::string* log=nullptr) noexcept = 0;
 
   /**
    * Returns the sampler name or short description with the configuration.

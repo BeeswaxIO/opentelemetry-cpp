@@ -14,6 +14,7 @@
 #include "opentelemetry/version.h"
 
 #include <memory>
+#include <string>
 
 OPENTELEMETRY_BEGIN_NAMESPACE
 namespace sdk
@@ -35,7 +36,8 @@ public:
       nostd::string_view name,
       const opentelemetry::common::KeyValueIterable &attributes,
       const trace_api::SpanContextKeyValueIterable &links,
-      const trace_api::StartSpanOptions &options = {}) noexcept override;
+      const trace_api::StartSpanOptions &options = {},
+      std::string* log=nullptr) noexcept override;
 
   void ForceFlushWithMicroseconds(uint64_t timeout) noexcept override;
 

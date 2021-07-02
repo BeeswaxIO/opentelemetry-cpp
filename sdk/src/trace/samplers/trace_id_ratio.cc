@@ -91,23 +91,26 @@ SamplingResult TraceIdRatioBasedSampler::ShouldSample(
     trace_api::SpanKind /*span_kind*/,
     const opentelemetry::common::KeyValueIterable & /*attributes*/,
     const trace_api::SpanContextKeyValueIterable & /*links*/,
-    bool log) noexcept
+    std::string* log) noexcept
 {
   if (threshold_ == 0) {
-    if (log) std::cout << "TraceIdRatioBasedSampler::ShouldSample zero-threshold drop"
-		       << std::endl;
+    if (log) {
+      *log += "TraceIdRatioBasedSampler::ShouldSample zero-threshold drop\n";
+    }
     return {Decision::DROP, nullptr};
   }
 
   if (CalculateThresholdFromBuffer(trace_id) <= threshold_)
   {
-    if (log) std::cout << "TraceIdRatioBasedSampler::ShouldSample RECORD_AND_SAMPLE"
-		       << std::endl;
+    if (log) {
+      *log += "TraceIdRatioBasedSampler::ShouldSample RECORD_AND_SAMPLE\n";
+    }
     return {Decision::RECORD_AND_SAMPLE, nullptr};
   }
 
-  if (log) std::cout << "TraceIdRatioBasedSampler::ShouldSample DROP"
-		     << std::endl;
+  if (log) {
+    *log += "TraceIdRatioBasedSampler::ShouldSample DROP\n";
+  }
   return {Decision::DROP, nullptr};
 }
 

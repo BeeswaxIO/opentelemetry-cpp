@@ -29,7 +29,7 @@ public:
       trace_api::SpanKind /*span_kind*/,
       const opentelemetry::common::KeyValueIterable & /*attributes*/,
       const trace_api::SpanContextKeyValueIterable & /*links*/,
-      bool log = false) noexcept override
+      std::string* log=nullptr) noexcept override
   {
     if (!parent_context.IsValid())
     {
