@@ -72,7 +72,8 @@ public:
   nostd::shared_ptr<Span> StartSpan(nostd::string_view /*name*/,
                                     const common::KeyValueIterable & /*attributes*/,
                                     const SpanContextKeyValueIterable & /*links*/,
-                                    const StartSpanOptions & /*options*/) noexcept override
+                                    const StartSpanOptions & /*options*/,
+				    std::string*) noexcept override
   {
     // Don't allocate a no-op span for every StartSpan call, but use a static
     // singleton for this case.
