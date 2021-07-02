@@ -82,8 +82,8 @@ nostd::shared_ptr<trace_api::Span> Tracer::StartSpan(
                                     : is_parent_span_valid ? parent_context.trace_state()
                                                            : trace_api::TraceState::GetDefault()));
     if (really_log) {
-      std::cout << "Tracer::StartSpan span_context.IsValid() "
-		<< span_context.IsValid() << std::endl;
+      std::cout << "Tracer::StartSpan span_context->IsValid() "
+		<< span_context->IsValid() << std::endl;
     }
 
     auto span = nostd::shared_ptr<trace_api::Span>{
@@ -91,8 +91,8 @@ nostd::shared_ptr<trace_api::Span> Tracer::StartSpan(
                                 parent_context, std::move(span_context)}};
 
     if (really_log) {
-      std::cout << "Tracer::StartSpan span.GetContext().IsValid() "
-		<< span.GetContext().IsValid() << std::endl;
+      std::cout << "Tracer::StartSpan span->GetContext().IsValid() "
+		<< span->GetContext().IsValid() << std::endl;
     }
 
     // if the attributes is not nullptr, add attributes to the span.
