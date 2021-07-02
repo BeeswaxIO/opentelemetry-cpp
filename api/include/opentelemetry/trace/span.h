@@ -70,6 +70,8 @@ struct StartSpanOptions
   // SpanContext remote_parent;
   // Links
   SpanKind kind = SpanKind::kInternal;
+
+  bool log = false;
 };
 /**
  * StartEndOptions provides options to set properties of a Span when it is

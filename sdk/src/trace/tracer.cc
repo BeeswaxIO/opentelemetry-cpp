@@ -9,6 +9,7 @@
 #include "src/trace/span.h"
 
 #include <memory>
+#include <iostream>
 
 OPENTELEMETRY_BEGIN_NAMESPACE
 namespace sdk
@@ -27,8 +28,15 @@ nostd::shared_ptr<trace_api::Span> Tracer::StartSpan(
     const trace_api::SpanContextKeyValueIterable &links,
     const trace_api::StartSpanOptions &options) noexcept
 {
+  bool really_log = options.log && options.parent.IsValid();
+
   trace_api::SpanContext parent_context =
       options.parent.IsValid() ? options.parent : GetCurrentSpan()->GetContext();
+  if (really_log) {
+    std::cout << "Tracer::StartSpan: valid options context" << std::endl;
+    std::cout << "Tracer::StartSpan: parent_context validity "
+	      << parent_context.IsValid() << std::endl;
+  }
 
   trace_api::TraceId trace_id;
   trace_api::SpanId span_id = GetIdGenerator().GenerateSpanId();
@@ -45,7 +53,8 @@ nostd::shared_ptr<trace_api::Span> Tracer::StartSpan(
   }
 
   auto sampling_result = context_->GetSampler().ShouldSample(parent_context, trace_id, name,
-                                                             options.kind, attributes, links);
+                                                             options.kind, attributes, links,
+							     really_log);
 
   if (sampling_result.decision == Decision::DROP)
   {
@@ -54,20 +63,37 @@ nostd::shared_ptr<trace_api::Span> Tracer::StartSpan(
     static nostd::shared_ptr<trace_api::Span> noop_span(
         new trace_api::NoopSpan{this->shared_from_this()});
 
+    if (really_log) {
+      std::cout << "Tracer::StartSpan DROP" << std::endl;
+    }
+
     return noop_span;
   }
   else
   {
-
+    if (really_log) {
+      std::cout << "Tracer::StartSpan SAMPLE" << std::endl;
+      std::cout << "Tracer::StartSpan sampling_result.trace_state "
+		<< sampling_result.trace_state << std::endl;
+    }
     auto span_context = std::unique_ptr<trace_api::SpanContext>(new trace_api::SpanContext(
         trace_id, span_id, trace_api::TraceFlags{trace_api::TraceFlags::kIsSampled}, false,
         sampling_result.trace_state ? sampling_result.trace_state
                                     : is_parent_span_valid ? parent_context.trace_state()
                                                            : trace_api::TraceState::GetDefault()));
+    if (really_log) {
+      std::cout << "Tracer::StartSpan span_context.IsValid() "
+		<< span_context.IsValid() << std::endl;
+    }
 
     auto span = nostd::shared_ptr<trace_api::Span>{
         new (std::nothrow) Span{this->shared_from_this(), name, attributes, links, options,
                                 parent_context, std::move(span_context)}};
+
+    if (really_log) {
+      std::cout << "Tracer::StartSpan span.GetContext().IsValid() "
+		<< span.GetContext().IsValid() << std::endl;
+    }
 
     // if the attributes is not nullptr, add attributes to the span.
     if (sampling_result.attributes)
