@@ -26,7 +26,7 @@ SamplingResult ParentBasedSampler::ShouldSample(
   if (!parent_context.IsValid())
   {
     if (log) {
-      *log += "ParentBasedSampler::ShouldSample invalid parent context (delegate decision)\n";
+      *log += "ParentBasedSampler::ShouldSample invalid parent context (delegate decision) // ";
     }
     // If no parent (root span) exists returns the result of the delegateSampler
     return delegate_sampler_->ShouldSample(parent_context, trace_id, name, span_kind, attributes,
@@ -34,20 +34,20 @@ SamplingResult ParentBasedSampler::ShouldSample(
   }
 
   if (log) {
-    *log += "ParentBasedSampler::ShouldSample valid parent context (not delegating)\n";
+    *log += "ParentBasedSampler::ShouldSample valid parent context (not delegating) // ";
   }
 
   // If parent exists:
   if (parent_context.IsSampled())
   {
     if (log) {
-      *log += "ParentBasedSampler::ShouldSample parent_context is sampled\n";
+      *log += "ParentBasedSampler::ShouldSample parent_context is sampled // ";
     }
     return {Decision::RECORD_AND_SAMPLE, nullptr, parent_context.trace_state()};
   }
 
   if (log) {
-    *log += "ParentBasedSampler::ShouldSample parent_context is not sampled\n";
+    *log += "ParentBasedSampler::ShouldSample parent_context is not sampled // ";
   }
 
   return {Decision::DROP, nullptr, parent_context.trace_state()};

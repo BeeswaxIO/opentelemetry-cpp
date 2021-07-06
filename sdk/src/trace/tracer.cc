@@ -32,9 +32,9 @@ nostd::shared_ptr<trace_api::Span> Tracer::StartSpan(
   trace_api::SpanContext parent_context =
       options.parent.IsValid() ? options.parent : GetCurrentSpan()->GetContext();
   if (log) {
-    *log += "Tracer::StartSpan: valid options context\n";
-    *log += "Tracer::StartSpan: parent_context validity "
-      + std::to_string(parent_context.IsValid()) + "\n";
+    *log += "Tracer::StartSpan: valid options context // ";
+    *log += "Tracer::StartSpan: parent_context validity // "
+      + std::to_string(parent_context.IsValid()) + " // ";
   }
 
   trace_api::TraceId trace_id;
@@ -63,7 +63,7 @@ nostd::shared_ptr<trace_api::Span> Tracer::StartSpan(
         new trace_api::NoopSpan{this->shared_from_this()});
 
     if (log) {
-      *log += "Tracer::StartSpan DROP\n";
+      *log += "Tracer::StartSpan DROP // ";
     }
 
     return noop_span;
@@ -71,9 +71,9 @@ nostd::shared_ptr<trace_api::Span> Tracer::StartSpan(
   else
   {
     if (log) {
-      *log += "Tracer::StartSpan SAMPLE\n";
+      *log += "Tracer::StartSpan SAMPLE // ";
       *log += "Tracer::StartSpan sampling_result.trace_state "
-	+ std::to_string(sampling_result.trace_state) + "\n";
+	+ std::to_string(sampling_result.trace_state) + " // ";
     }
     auto span_context = std::unique_ptr<trace_api::SpanContext>(new trace_api::SpanContext(
         trace_id, span_id, trace_api::TraceFlags{trace_api::TraceFlags::kIsSampled}, false,
@@ -82,7 +82,7 @@ nostd::shared_ptr<trace_api::Span> Tracer::StartSpan(
                                                            : trace_api::TraceState::GetDefault()));
     if (log) {
       *log += "Tracer::StartSpan span_context->IsValid() "
-	+ std::to_string(span_context->IsValid()) + "\n";
+	+ std::to_string(span_context->IsValid()) + " // ";
     }
 
     auto span = nostd::shared_ptr<trace_api::Span>{
@@ -91,7 +91,7 @@ nostd::shared_ptr<trace_api::Span> Tracer::StartSpan(
 
     if (log) {
       *log += "Tracer::StartSpan span->GetContext().IsValid() "
-	+ std::to_string(span->GetContext().IsValid()) + "\n";
+	+ std::to_string(span->GetContext().IsValid()) + " // ";
     }
 
     // if the attributes is not nullptr, add attributes to the span.

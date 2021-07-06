@@ -95,7 +95,7 @@ SamplingResult TraceIdRatioBasedSampler::ShouldSample(
 {
   if (threshold_ == 0) {
     if (log) {
-      *log += "TraceIdRatioBasedSampler::ShouldSample zero-threshold drop\n";
+      *log += "TraceIdRatioBasedSampler::ShouldSample zero-threshold drop // ";
     }
     return {Decision::DROP, nullptr};
   }
@@ -103,13 +103,13 @@ SamplingResult TraceIdRatioBasedSampler::ShouldSample(
   if (CalculateThresholdFromBuffer(trace_id) <= threshold_)
   {
     if (log) {
-      *log += "TraceIdRatioBasedSampler::ShouldSample RECORD_AND_SAMPLE\n";
+      *log += "TraceIdRatioBasedSampler::ShouldSample RECORD_AND_SAMPLE // ";
     }
     return {Decision::RECORD_AND_SAMPLE, nullptr};
   }
 
   if (log) {
-    *log += "TraceIdRatioBasedSampler::ShouldSample DROP\n";
+    *log += "TraceIdRatioBasedSampler::ShouldSample DROP // ";
   }
   return {Decision::DROP, nullptr};
 }
