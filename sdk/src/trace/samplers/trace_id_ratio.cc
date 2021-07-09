@@ -17,7 +17,6 @@
 
 #include <cmath>
 #include <cstdint>
-#include <iostream>
 #include <stdexcept>
 
 namespace trace_api = opentelemetry::trace;
@@ -90,21 +89,16 @@ SamplingResult TraceIdRatioBasedSampler::ShouldSample(
     nostd::string_view /*name*/,
     trace_api::SpanKind /*span_kind*/,
     const opentelemetry::common::KeyValueIterable & /*attributes*/,
-    const trace_api::SpanContextKeyValueIterable & /*links*/,
-    bool log) noexcept
+    const trace_api::SpanContextKeyValueIterable & /*links*/) noexcept
 {
-  if (threshold_ == 0) {
-    if (log) std::cout << "lib: RATIO zero-threshold drop" << std::endl;
+  if (threshold_ == 0)
     return {Decision::DROP, nullptr};
-  }
 
   if (CalculateThresholdFromBuffer(trace_id) <= threshold_)
   {
-    if (log) std::cout << "lib: RATIO record and sample" << std::endl;
     return {Decision::RECORD_AND_SAMPLE, nullptr};
   }
 
-  if (log) std::cout << "lib: RATIO DROP" << std::endl;
   return {Decision::DROP, nullptr};
 }
 
