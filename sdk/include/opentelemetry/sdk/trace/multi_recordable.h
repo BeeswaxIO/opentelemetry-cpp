@@ -120,11 +120,11 @@ public:
     }
   }
 
-  void SetResource(const opentelemetry::sdk::resource::Resource &resource) noexcept override
+  void SetResource(const opentelemetry::sdk::resource::Resource &resource, std::string* log=nullptr) noexcept override
   {
     for (auto &recordable : recordables_)
     {
-      recordable.second->SetResource(resource);
+      recordable.second->SetResource(resource, log);
     }
   }
 

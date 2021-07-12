@@ -5,6 +5,7 @@
 
 #include <mutex>
 #include <vector>
+#include <string>
 
 #include "opentelemetry/sdk/trace/multi_recordable.h"
 #include "opentelemetry/sdk/trace/processor.h"
@@ -73,7 +74,8 @@ public:
   }
 
   virtual void OnStart(Recordable &span,
-                       const opentelemetry::trace::SpanContext &parent_context) noexcept override
+                       const opentelemetry::trace::SpanContext &parent_context,
+		       std::string* log=nullptr) noexcept override
   {
     auto multi_recordable = static_cast<MultiRecordable *>(&span);
     ProcessorNode *node   = head_;
@@ -83,13 +85,13 @@ public:
       auto &recordable = multi_recordable->GetRecordable(*processor);
       if (recordable != nullptr)
       {
-        processor->OnStart(*recordable, parent_context);
+        processor->OnStart(*recordable, parent_context, log);
       }
       node = node->next_;
     }
   }
 
-  virtual void OnEnd(std::unique_ptr<Recordable> &&span) noexcept override
+  virtual void OnEnd(std::unique_ptr<Recordable> &&span, std::string* log=nullptr) noexcept override
   {
     auto multi_recordable = static_cast<MultiRecordable *>(span.release());
     ProcessorNode *node   = head_;
@@ -99,7 +101,7 @@ public:
       auto recordable = multi_recordable->ReleaseRecordable(*processor);
       if (recordable != nullptr)
       {
-        processor->OnEnd(std::move(recordable));
+        processor->OnEnd(std::move(recordable), log);
       }
       node = node->next_;
     }

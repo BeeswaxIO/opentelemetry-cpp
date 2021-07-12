@@ -41,10 +41,12 @@ public:
   }
 
   void OnStart(Recordable &span,
-               const opentelemetry::trace::SpanContext &parent_context) noexcept override
+               const opentelemetry::trace::SpanContext &parent_context,
+	       std::string* log=nullptr) noexcept override
   {}
 
-  void OnEnd(std::unique_ptr<Recordable> &&span) noexcept override
+  void OnEnd(std::unique_ptr<Recordable> &&span,
+	     std::string* log=nullptr) noexcept override
   {
     nostd::span<std::unique_ptr<Recordable>> batch(&span, 1);
     const std::lock_guard<opentelemetry::common::SpinLockMutex> locked(lock_);

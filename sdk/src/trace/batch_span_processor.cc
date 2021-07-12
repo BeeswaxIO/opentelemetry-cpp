@@ -29,22 +29,27 @@ std::unique_ptr<Recordable> BatchSpanProcessor::MakeRecordable() noexcept
   return exporter_->MakeRecordable();
 }
 
-void BatchSpanProcessor::OnStart(Recordable &, const SpanContext &) noexcept
+void BatchSpanProcessor::OnStart(Recordable &, const SpanContext &, std::string* log) noexcept
 {
-  // no-op
+  if (log) *log += "BatchSpanProcessor::OnStart no-op OnStart // ";
 }
 
-void BatchSpanProcessor::OnEnd(std::unique_ptr<Recordable> &&span) noexcept
+void BatchSpanProcessor::OnEnd(std::unique_ptr<Recordable> &&span, std::string* log) noexcept
 {
+  if (log) *log += "BatchSpanProcessor::OnEnd inside // ";
   if (is_shutdown_.load() == true)
   {
+    if (log) *log += "BatchSpanProcessor::OnEnd shutdown load // ";
     return;
   }
 
   if (buffer_.Add(span) == false)
   {
+    if (log) *log += "BatchSpanProcessor::OnEnd add span false // ";
     return;
   }
+
+  if (log) *log += "BatchSpanProcessor::OnEnd possibly notify // ";
 
   // If the queue gets at least half full a preemptive notification is
   // sent to the worker thread to start a new export cycle.

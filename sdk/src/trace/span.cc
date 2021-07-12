@@ -59,8 +59,10 @@ Span::Span(std::shared_ptr<Tracer> &&tracer,
 {
   if (recordable_ == nullptr)
   {
+    if (options.log) *options.log += "Span::Span null recordable // ";
     return;
   }
+  if (options.log) *options.log += "Span::Span non-null recordable // ";
   recordable_->SetName(name);
   recordable_->SetInstrumentationLibrary(tracer_->GetInstrumentationLibrary());
   recordable_->SetIdentity(*span_context_, parent_span_context.IsValid()
@@ -82,8 +84,16 @@ Span::Span(std::shared_ptr<Tracer> &&tracer,
   recordable_->SetSpanKind(options.kind);
   recordable_->SetStartTime(NowOr(options.start_system_time));
   start_steady_time = NowOr(options.start_steady_time);
-  recordable_->SetResource(tracer_->GetResource());
-  tracer_->GetProcessor().OnStart(*recordable_, parent_span_context);
+  auto& resource = tracer_->GetResource();
+  auto& attr = resource.GetAttributes();
+  if (options.log) {
+    for (auto& kv : attr) {
+      if (!nostd::holds_alternative<std::string>(kv.second)) continue;
+      *options.log += kv.first + " " + nostd::get<std::string>(kv.second) + " // ";
+    }
+  }
+  recordable_->SetResource(resource);
+  tracer_->GetProcessor().OnStart(*recordable_, parent_span_context, options.log);
 }
 
 Span::~Span()
@@ -154,15 +164,18 @@ void Span::UpdateName(nostd::string_view name) noexcept
 void Span::End(const trace_api::EndSpanOptions &options) noexcept
 {
   std::lock_guard<std::mutex> lock_guard{mu_};
+  if (options.log) *options.log += "Span::End // ";
 
   if (has_ended_ == true)
   {
+    if (options.log) *options.log += "Span::End has_ended // ";
     return;
   }
   has_ended_ = true;
 
   if (recordable_ == nullptr)
   {
+    if (options.log) *options.log += "Span::End null recordable // ";
     return;
   }
 
@@ -170,7 +183,7 @@ void Span::End(const trace_api::EndSpanOptions &options) noexcept
   recordable_->SetDuration(std::chrono::steady_clock::time_point(end_steady_time) -
                            std::chrono::steady_clock::time_point(start_steady_time));
 
-  tracer_->GetProcessor().OnEnd(std::move(recordable_));
+  tracer_->GetProcessor().OnEnd(std::move(recordable_), options.log);
   recordable_.reset();
 }
 

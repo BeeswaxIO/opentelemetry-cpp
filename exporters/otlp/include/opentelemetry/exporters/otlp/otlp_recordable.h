@@ -12,6 +12,8 @@
 #include "opentelemetry/sdk/trace/recordable.h"
 #include "opentelemetry/version.h"
 
+#include <string>
+
 OPENTELEMETRY_BEGIN_NAMESPACE
 namespace exporter
 {
@@ -23,7 +25,7 @@ public:
   const proto::trace::v1::Span &span() const noexcept { return span_; }
 
   /** Dynamically converts the resource of this span into a proto. */
-  proto::resource::v1::Resource ProtoResource() const noexcept;
+  proto::resource::v1::Resource ProtoResource(std::string* log=nullptr) const noexcept;
 
   proto::common::v1::InstrumentationLibrary GetProtoInstrumentationLibrary() const noexcept;
 
@@ -46,7 +48,7 @@ public:
 
   void SetSpanKind(opentelemetry::trace::SpanKind span_kind) noexcept override;
 
-  void SetResource(const opentelemetry::sdk::resource::Resource &resource) noexcept override;
+  void SetResource(const opentelemetry::sdk::resource::Resource &resource, std::string* log=nullptr) noexcept override;
 
   void SetStartTime(opentelemetry::common::SystemTimestamp start_time) noexcept override;
 
