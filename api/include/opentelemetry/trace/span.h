@@ -71,8 +71,6 @@ struct StartSpanOptions
   // SpanContext remote_parent;
   // Links
   SpanKind kind = SpanKind::kInternal;
-
-  std::string* log = nullptr;
 };
 /**
  * StartEndOptions provides options to set properties of a Span when it is
@@ -82,8 +80,6 @@ struct EndSpanOptions
 {
   // Optionally sets the end time of a Span.
   common::SteadyTimestamp end_steady_time;
-
-  std::string* log = nullptr;
 };
 
 class Tracer;

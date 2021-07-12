@@ -223,19 +223,21 @@ void PopulateAttribute(opentelemetry::proto::common::v1::KeyValue *attribute,
   }
 }
 
-proto::resource::v1::Resource OtlpRecordable::ProtoResource(std::string* log) const noexcept
+proto::resource::v1::Resource OtlpRecordable::ProtoResource() const noexcept
 {
   proto::resource::v1::Resource proto;
   if (resource_)
   {
-    if (log) *log += "OtlpRecordable::ProtoResource // ";
+    std::cout << "bjlbjl OtlpRecordable::ProtoResource attributes" << std::endl;
     for (const auto &kv : resource_->GetAttributes())
     {
-      if (log && nostd::holds_alternative<std::string>(kv.second))
-	*log += kv.first + " " + nostd::get<std::string>(kv.second);
+      if (nostd::holds_alternative<std::string>(kv.second))
+	std::cout << " " << kv.first + " " + nostd::get<std::string>(kv.second) << std::endl;
       PopulateAttribute(proto.add_attributes(), kv.first, kv.second);
     }
-    if (log) *log += " // ";
+  }
+  else {
+    std::cout << "bjlbjl no resource" << std::endl;
   }
 
   return proto;
@@ -253,9 +255,9 @@ proto::common::v1::InstrumentationLibrary OtlpRecordable::GetProtoInstrumentatio
   return instrumentation_library;
 }
 
-void OtlpRecordable::SetResource(const opentelemetry::sdk::resource::Resource &resource, std::string* log) noexcept
+void OtlpRecordable::SetResource(const opentelemetry::sdk::resource::Resource &resource) noexcept
 {
-  if (log) *log += "OtlpRecordable::SetResource resource // ";
+  std::cout << "OtlpRecordable::SetResource resource" << std::endl;
   resource_ = &resource;
 };
 

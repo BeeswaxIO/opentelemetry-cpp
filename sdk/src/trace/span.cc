@@ -8,6 +8,23 @@
 #include "opentelemetry/trace/trace_flags.h"
 #include "opentelemetry/version.h"
 
+#include <iostream>
+
+namespace {
+  template <typename Id>
+  std::string IdString(const Id& id) {
+    constexpr auto num_bytes = Id::kSize;
+    constexpr auto num_chars = 2 * num_bytes;
+
+    std::string result(num_chars, '0');
+    opentelemetry::nostd::span<char, num_chars> result_span(&(*result.begin()),
+							    num_chars);
+
+    id.ToLowerBase16(result_span);
+    return result;
+  }
+}
+
 OPENTELEMETRY_BEGIN_NAMESPACE
 namespace sdk
 {
@@ -59,10 +76,18 @@ Span::Span(std::shared_ptr<Tracer> &&tracer,
 {
   if (recordable_ == nullptr)
   {
-    if (options.log) *options.log += "Span::Span null recordable // ";
+    std::cout << "bjlbjl Span::Span null recordable "
+	      << IdString(span_context_->trace_id())
+	      << " "
+	      << IdString(span_context_->span_id())
+	      << std::endl;
     return;
   }
-  if (options.log) *options.log += "Span::Span non-null recordable // ";
+  std::cout << "bjlbjl Span::Span non-null recordable "
+	      << IdString(span_context_->trace_id())
+	      << " "
+	      << IdString(span_context_->span_id())
+	      << std::endl;    
   recordable_->SetName(name);
   recordable_->SetInstrumentationLibrary(tracer_->GetInstrumentationLibrary());
   recordable_->SetIdentity(*span_context_, parent_span_context.IsValid()
@@ -86,14 +111,13 @@ Span::Span(std::shared_ptr<Tracer> &&tracer,
   start_steady_time = NowOr(options.start_steady_time);
   auto& resource = tracer_->GetResource();
   auto& attr = resource.GetAttributes();
-  if (options.log) {
-    for (auto& kv : attr) {
-      if (!nostd::holds_alternative<std::string>(kv.second)) continue;
-      *options.log += kv.first + " " + nostd::get<std::string>(kv.second) + " // ";
-    }
+  for (auto& kv : attr) {
+    if (!nostd::holds_alternative<std::string>(kv.second)) continue;
+    std::cout << "bjlbjl kv " << kv.first + " " + nostd::get<std::string>(kv.second)
+	      << std::endl;
   }
   recordable_->SetResource(resource);
-  tracer_->GetProcessor().OnStart(*recordable_, parent_span_context, options.log);
+  tracer_->GetProcessor().OnStart(*recordable_, parent_span_context);
 }
 
 Span::~Span()
@@ -164,26 +188,39 @@ void Span::UpdateName(nostd::string_view name) noexcept
 void Span::End(const trace_api::EndSpanOptions &options) noexcept
 {
   std::lock_guard<std::mutex> lock_guard{mu_};
-  if (options.log) *options.log += "Span::End // ";
 
   if (has_ended_ == true)
   {
-    if (options.log) *options.log += "Span::End has_ended // ";
+    std::cout << "bjlbjl Span::End has ended "
+	      << IdString(span_context_->trace_id())
+	      << " "
+	      << IdString(span_context_->span_id())
+	      << std::endl;    
     return;
   }
   has_ended_ = true;
 
   if (recordable_ == nullptr)
   {
-    if (options.log) *options.log += "Span::End null recordable // ";
+    std::cout << "bjlbjl Span::End null recordable "
+	      << IdString(span_context_->trace_id())
+	      << " "
+	      << IdString(span_context_->span_id())
+	      << std::endl;    
     return;
   }
+
+  std::cout << "bjlbjl Span::End null recordable "
+	    << IdString(span_context_->trace_id())
+	    << " "
+	    << IdString(span_context_->span_id())
+	    << std::endl;    
 
   auto end_steady_time = NowOr(options.end_steady_time);
   recordable_->SetDuration(std::chrono::steady_clock::time_point(end_steady_time) -
                            std::chrono::steady_clock::time_point(start_steady_time));
 
-  tracer_->GetProcessor().OnEnd(std::move(recordable_), options.log);
+  tracer_->GetProcessor().OnEnd(std::move(recordable_));
   recordable_.reset();
 }
 

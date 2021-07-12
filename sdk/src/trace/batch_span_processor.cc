@@ -4,10 +4,26 @@
 #include "opentelemetry/sdk/trace/batch_span_processor.h"
 
 #include <vector>
+#include <iostream>
 using opentelemetry::sdk::common::AtomicUniquePtr;
 using opentelemetry::sdk::common::CircularBuffer;
 using opentelemetry::sdk::common::CircularBufferRange;
 using opentelemetry::trace::SpanContext;
+
+namespace {
+  template <typename Id>
+  std::string IdString(const Id& id) {
+    constexpr auto num_bytes = Id::kSize;
+    constexpr auto num_chars = 2 * num_bytes;
+
+    std::string result(num_chars, '0');
+    opentelemetry::nostd::span<char, num_chars> result_span(&(*result.begin()),
+							    num_chars);
+
+    id.ToLowerBase16(result_span);
+    return result;
+  }
+}
 
 OPENTELEMETRY_BEGIN_NAMESPACE
 namespace sdk
@@ -29,33 +45,34 @@ std::unique_ptr<Recordable> BatchSpanProcessor::MakeRecordable() noexcept
   return exporter_->MakeRecordable();
 }
 
-void BatchSpanProcessor::OnStart(Recordable &, const SpanContext &, std::string* log) noexcept
+void BatchSpanProcessor::OnStart(Recordable &, const SpanContext & parent_context) noexcept
 {
-  if (log) *log += "BatchSpanProcessor::OnStart no-op OnStart // ";
+  std::cout << "bjlbjl BatchSpanProcessor::OnStart no-op OnStart "
+	    << IdString(parent_context.trace_id()) << " " << IdString(parent_context.span_id()) << std::endl;
 }
 
-void BatchSpanProcessor::OnEnd(std::unique_ptr<Recordable> &&span, std::string* log) noexcept
+void BatchSpanProcessor::OnEnd(std::unique_ptr<Recordable> &&span) noexcept
 {
-  if (log) *log += "BatchSpanProcessor::OnEnd inside // ";
   if (is_shutdown_.load() == true)
   {
-    if (log) *log += "BatchSpanProcessor::OnEnd shutdown load // ";
+    std::cout << "bjlbjl BatchSpanProcessor::OnEnd shutdown load" << std::endl;
     return;
   }
 
   if (buffer_.Add(span) == false)
   {
-    if (log) *log += "BatchSpanProcessor::OnEnd add span false // ";
+    std::cout << "bjlbjl BatchSpanProcessor::OnEnd add span false" << std::endl;
     return;
   }
 
-  if (log) *log += "BatchSpanProcessor::OnEnd possibly notify // ";
+  std::cout << "bjlbjl BatchSpanProcessor::OnEnd possibly notify" << std::endl;
 
   // If the queue gets at least half full a preemptive notification is
   // sent to the worker thread to start a new export cycle.
   if (buffer_.size() >= max_queue_size_ / 2)
   {
     // signal the worker thread
+    std::cout << "bjlbjl BatchSpanProcessor::OnEnd notify" << std::endl;
     cv_.notify_one();
   }
 }

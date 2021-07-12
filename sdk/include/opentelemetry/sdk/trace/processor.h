@@ -39,14 +39,13 @@ public:
    * @param parent_context The parent context of the span that just started
    */
   virtual void OnStart(Recordable &span,
-                       const opentelemetry::trace::SpanContext &parent_context,
-		       std::string* log=nullptr) noexcept = 0;
+                       const opentelemetry::trace::SpanContext &parent_context) noexcept = 0;
 
   /**
    * OnEnd is called when a span is ended.
    * @param span a recordable for a span that was ended
    */
-  virtual void OnEnd(std::unique_ptr<Recordable> &&span, std::string* log=nullptr) noexcept = 0;
+  virtual void OnEnd(std::unique_ptr<Recordable> &&span) noexcept = 0;
 
   /**
    * Export all ended spans that have not yet been exported.

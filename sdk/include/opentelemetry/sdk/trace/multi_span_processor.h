@@ -73,9 +73,21 @@ public:
     return recordable;
   }
 
+  template <typename Id>
+  std::string IdString(const Id& id) {
+    constexpr auto num_bytes = Id::kSize;
+    constexpr auto num_chars = 2 * num_bytes;
+
+    std::string result(num_chars, '0');
+    opentelemetry::nostd::span<char, num_chars> result_span(&(*result.begin()),
+							    num_chars);
+
+    id.ToLowerBase16(result_span);
+    return result;
+  }
+
   virtual void OnStart(Recordable &span,
-                       const opentelemetry::trace::SpanContext &parent_context,
-		       std::string* log=nullptr) noexcept override
+                       const opentelemetry::trace::SpanContext &parent_context) noexcept override
   {
     auto multi_recordable = static_cast<MultiRecordable *>(&span);
     ProcessorNode *node   = head_;
@@ -83,15 +95,19 @@ public:
     {
       auto processor   = node->value_.get();
       auto &recordable = multi_recordable->GetRecordable(*processor);
-      if (recordable != nullptr)
-      {
-        processor->OnStart(*recordable, parent_context, log);
+      if (recordable != nullptr) {
+	std::cout << "bjlbjl non-null recordable in MultiSpanProcessor::OnStart " << IdString(parent_context.trace_id()) << " " << IdString(parent_context.span_id()) << std::endl;
+        processor->OnStart(*recordable, parent_context);
+      }
+      else {
+	std::cout << "bjlbjl null recordable in MultiSpanProcessor::OnStart "
+		  << IdString(parent_context.trace_id()) << " " << IdString(parent_context.span_id()) << std::endl;
       }
       node = node->next_;
     }
   }
 
-  virtual void OnEnd(std::unique_ptr<Recordable> &&span, std::string* log=nullptr) noexcept override
+  virtual void OnEnd(std::unique_ptr<Recordable> &&span) noexcept override
   {
     auto multi_recordable = static_cast<MultiRecordable *>(span.release());
     ProcessorNode *node   = head_;
@@ -101,7 +117,11 @@ public:
       auto recordable = multi_recordable->ReleaseRecordable(*processor);
       if (recordable != nullptr)
       {
-        processor->OnEnd(std::move(recordable), log);
+	std::cout << "bjlbjl MultiSpanProcessor::OnEnd non-null recordable" << std::endl;
+        processor->OnEnd(std::move(recordable));
+      }
+      else {
+	std::cout << "bjlbjl MultiSpanProcessor::OnEnd null recordable" << std::endl;
       }
       node = node->next_;
     }

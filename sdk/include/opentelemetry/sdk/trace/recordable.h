@@ -126,7 +126,7 @@ public:
    * Set Resource of the span
    * @param Resource the resource to set
    */
-  virtual void SetResource(const opentelemetry::sdk::resource::Resource &resource, std::string* log=nullptr) noexcept = 0;
+  virtual void SetResource(const opentelemetry::sdk::resource::Resource &resource) noexcept = 0;
 
   /**
    * Set the start time of the span.

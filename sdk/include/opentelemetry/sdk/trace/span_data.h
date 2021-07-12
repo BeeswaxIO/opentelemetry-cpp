@@ -235,7 +235,7 @@ public:
     span_kind_ = span_kind;
   }
 
-  void SetResource(const opentelemetry::sdk::resource::Resource &resource, std::string* log=nullptr) noexcept override
+  void SetResource(const opentelemetry::sdk::resource::Resource &resource) noexcept override
   {
     resource_ = &resource;
   }
