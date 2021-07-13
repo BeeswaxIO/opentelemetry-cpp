@@ -58,6 +58,8 @@ public:
       const opentelemetry::sdk::instrumentationlibrary::InstrumentationLibrary
           &instrumentation_library) noexcept override;
 
+  void Print() const override;
+
 private:
   proto::trace::v1::Span span_;
   const opentelemetry::sdk::resource::Resource *resource_ = nullptr;

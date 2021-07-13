@@ -31,6 +31,15 @@ void PopulateRequest(const nostd::span<std::unique_ptr<sdk::trace::Recordable>> 
   for (auto &recordable : spans)
   {
     auto rec = std::unique_ptr<OtlpRecordable>(static_cast<OtlpRecordable *>(recordable.release()));
+    std::cout << "bjlbjl printing from PopulateRequest in the GRPC exporter "
+	      << rec.get()
+	      << " "
+	      << has_resource
+	      << std::endl;
+    if (rec)
+      rec->Print();
+    else
+      std::cout << "bjlbjl PopulateRequest encountered null pointer" << std::endl;
     *instrumentation_lib->add_spans()                       = std::move(rec->span());
     *instrumentation_lib->mutable_instrumentation_library() = rec->GetProtoInstrumentationLibrary();
 

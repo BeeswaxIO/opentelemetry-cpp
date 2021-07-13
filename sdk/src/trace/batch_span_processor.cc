@@ -45,40 +45,61 @@ std::unique_ptr<Recordable> BatchSpanProcessor::MakeRecordable() noexcept
   return exporter_->MakeRecordable();
 }
 
-void BatchSpanProcessor::OnStart(Recordable &, const SpanContext & parent_context) noexcept
+void BatchSpanProcessor::OnStart(Recordable& recordable, const SpanContext & parent_context) noexcept
 {
   std::cout << "bjlbjl BatchSpanProcessor::OnStart no-op OnStart "
-	    << IdString(parent_context.trace_id()) << " " << IdString(parent_context.span_id()) << std::endl;
+	    << IdString(parent_context.trace_id()) << " " << IdString(parent_context.span_id())
+	    << " " << &recordable
+	    << std::endl;
+  std::cout << "bjlbjl BatchSpanProcessor::OnStart no-op recordable print "
+	    << &recordable
+	    << std::endl;
+  recordable.Print();
 }
 
 void BatchSpanProcessor::OnEnd(std::unique_ptr<Recordable> &&span) noexcept
 {
+  std::cout << "bjlbjl BatchSpanProcessor::OnEnd printing " << span.get()
+	    << std::endl;
+  if (span)
+    span->Print();
+
   if (is_shutdown_.load() == true)
   {
-    std::cout << "bjlbjl BatchSpanProcessor::OnEnd shutdown load" << std::endl;
+    std::cout << "bjlbjl BatchSpanProcessor::OnEnd shutdown load "
+	      << span.get()
+	      << std::endl;
     return;
   }
 
   if (buffer_.Add(span) == false)
   {
-    std::cout << "bjlbjl BatchSpanProcessor::OnEnd add span false" << std::endl;
+    std::cout << "bjlbjl BatchSpanProcessor::OnEnd add span false "
+	      << span.get()
+	      << std::endl;
     return;
   }
 
-  std::cout << "bjlbjl BatchSpanProcessor::OnEnd possibly notify" << std::endl;
+  std::cout << "bjlbjl BatchSpanProcessor::OnEnd possibly notify "
+	    << span.get()
+	    << std::endl;
 
   // If the queue gets at least half full a preemptive notification is
   // sent to the worker thread to start a new export cycle.
   if (buffer_.size() >= max_queue_size_ / 2)
   {
     // signal the worker thread
-    std::cout << "bjlbjl BatchSpanProcessor::OnEnd notify" << std::endl;
+    std::cout << "bjlbjl BatchSpanProcessor::OnEnd notify "
+	      << span.get()
+	      << std::endl;
     cv_.notify_one();
   }
 }
 
 bool BatchSpanProcessor::ForceFlush(std::chrono::microseconds timeout) noexcept
 {
+  std::cout << "bjlbjl BatchSpanProcessor::ForceFlush called" << std::endl;
+  
   if (is_shutdown_.load() == true)
   {
     return false;
@@ -155,6 +176,7 @@ void BatchSpanProcessor::DoBackgroundWork()
 
 void BatchSpanProcessor::Export(const bool was_force_flush_called)
 {
+  std::cout << "bjlbjl BatchSpanProcessor::Export " << was_force_flush_called << std::endl;
   std::vector<std::unique_ptr<Recordable>> spans_arr;
 
   size_t num_spans_to_export;
@@ -175,6 +197,14 @@ void BatchSpanProcessor::Export(const bool was_force_flush_called)
                       std::unique_ptr<Recordable> swap_ptr = std::unique_ptr<Recordable>(nullptr);
                       ptr.Swap(swap_ptr);
                       spans_arr.push_back(std::unique_ptr<Recordable>(swap_ptr.release()));
+		      if (auto& bk = spans_arr.back()) {
+			  std::cout << "bjlbjl printing from Consume "
+				    << bk.get()
+				    << std::endl;
+			  bk->Print();
+		      } else {
+			std::cout << "bjlbjl null back in Consume!" << std::endl;
+		      }
                       return true;
                     });
                   });
@@ -194,6 +224,7 @@ void BatchSpanProcessor::Export(const bool was_force_flush_called)
 
 void BatchSpanProcessor::DrainQueue()
 {
+  std::cout << "bjlbjl BatchSpanProcessor::DrainQueue" << std::endl;
   while (buffer_.empty() == false)
   {
     Export(false);

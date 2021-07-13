@@ -2,6 +2,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "opentelemetry/exporters/otlp/otlp_recordable.h"
+#include "google/protobuf/text_format.h"
+
+namespace {
+template<class Proto>
+std::string ConvertToString(const Proto& proto)
+{
+  google::protobuf::TextFormat::Printer printer;
+  printer.SetExpandAny(true);
+
+  std::string result;
+  printer.PrintToString(proto, &result);
+  return result;
+}
+}
 
 OPENTELEMETRY_BEGIN_NAMESPACE
 namespace exporter
@@ -25,12 +39,15 @@ void OtlpRecordable::SetIdentity(const opentelemetry::trace::SpanContext &span_c
   span_.set_parent_span_id(reinterpret_cast<const char *>(parent_span_id.Id().data()),
                            trace::SpanId::kSize);
   span_.set_trace_state(span_context.trace_state()->ToHeader());
+  std::cout << "bjlbjl printing from OtlpRecordable::SetIdentity" << std::endl;
+  Print();
 }
 
 void PopulateAttribute(opentelemetry::proto::common::v1::KeyValue *attribute,
                        nostd::string_view key,
                        const opentelemetry::common::AttributeValue &value)
 {
+  std::cout << "bjlbjl PopulateAttribute" << std::endl;
   // Assert size of variant to ensure that this method gets updated if the variant
   // definition changes
   static_assert(
@@ -38,6 +55,7 @@ void PopulateAttribute(opentelemetry::proto::common::v1::KeyValue *attribute,
       "AttributeValue contains unknown type");
 
   attribute->set_key(key.data(), key.size());
+  std::cout << "bjlbjl PopulateAttribute: setting key " << key << std::endl;
 
   if (nostd::holds_alternative<bool>(value))
   {
@@ -65,12 +83,16 @@ void PopulateAttribute(opentelemetry::proto::common::v1::KeyValue *attribute,
   }
   else if (nostd::holds_alternative<const char *>(value))
   {
+    std::cout << "bjlbjl PopulateAttribute: setting const char* value " << nostd::get<const char*>(value) << std::endl;
     attribute->mutable_value()->set_string_value(nostd::get<const char *>(value));
+    std::cout << "bjlbjl PopulateAttribute: accessing " << attribute->value().string_value() << std::endl;
   }
   else if (nostd::holds_alternative<nostd::string_view>(value))
   {
+    std::cout << "bjlbjl PopulateAttribute: setting string_view value " << nostd::get<nostd::string_view>(value) << std::endl;
     attribute->mutable_value()->set_string_value(nostd::get<nostd::string_view>(value).data(),
                                                  nostd::get<nostd::string_view>(value).size());
+    std::cout << "bjlbjl PopulateAttribute: accessing " << attribute->value().string_value() << std::endl;
   }
   else if (nostd::holds_alternative<nostd::span<const uint8_t>>(value))
   {
@@ -125,8 +147,12 @@ void PopulateAttribute(opentelemetry::proto::common::v1::KeyValue *attribute,
   {
     for (const auto &val : nostd::get<nostd::span<const nostd::string_view>>(value))
     {
+      std::cout << "bjlbjl PopulateAttribute: setting string_view value (from span) " << val << std::endl;
       attribute->mutable_value()->mutable_array_value()->add_values()->set_string_value(val.data(),
                                                                                         val.size());
+      std::cout << "bjlbjl PopulateAttribute: accessing "
+		<< attribute->value().array_value().values().rbegin()->string_value()
+		<< std::endl;
     }
   }
 }
@@ -170,7 +196,9 @@ void PopulateAttribute(opentelemetry::proto::common::v1::KeyValue *attribute,
   }
   else if (nostd::holds_alternative<std::string>(value))
   {
+    std::cout << "bjlbjl PopulateAttribute: setting string value " << nostd::get<std::string>(value) << std::endl;
     attribute->mutable_value()->set_string_value(nostd::get<std::string>(value));
+    std::cout << "bjlbjl PopulateAttribute: accessing " << attribute->value().string_value() << std::endl;
   }
   else if (nostd::holds_alternative<std::vector<bool>>(value))
   {
@@ -218,9 +246,29 @@ void PopulateAttribute(opentelemetry::proto::common::v1::KeyValue *attribute,
   {
     for (const auto &val : nostd::get<std::vector<std::string>>(value))
     {
+      std::cout << "bjlbjl PopulateAttribute: setting string value (from vector) " << val << std::endl;
       attribute->mutable_value()->mutable_array_value()->add_values()->set_string_value(val);
+      std::cout << "bjlbjl PopulateAttribute: accessing " << attribute->value().array_value().values().rbegin()->string_value() << std::endl;
     }
   }
+}
+
+void OtlpRecordable::Print() const
+{
+  std::ostringstream oss;
+  oss << "bjlbjl OtlpRecordable::Print: "
+      << "resource pointer "
+      << resource_
+      << " ";
+  if (resource_) {
+    for (const auto &kv : resource_->GetAttributes())
+    {
+      if (nostd::holds_alternative<std::string>(kv.second))
+	oss << "resource (" + kv.first + " " + nostd::get<std::string>(kv.second) + ") ";
+    }
+  }
+  oss << "span " << ConvertToString(span_);
+  std::cout << oss.str() << std::endl;
 }
 
 proto::resource::v1::Resource OtlpRecordable::ProtoResource() const noexcept
@@ -228,7 +276,9 @@ proto::resource::v1::Resource OtlpRecordable::ProtoResource() const noexcept
   proto::resource::v1::Resource proto;
   if (resource_)
   {
-    std::cout << "bjlbjl OtlpRecordable::ProtoResource attributes" << std::endl;
+    std::cout << "bjlbjl OtlpRecordable::ProtoResource attributes "
+	      << resource_
+	      << std::endl;
     for (const auto &kv : resource_->GetAttributes())
     {
       if (nostd::holds_alternative<std::string>(kv.second))
@@ -237,8 +287,12 @@ proto::resource::v1::Resource OtlpRecordable::ProtoResource() const noexcept
     }
   }
   else {
-    std::cout << "bjlbjl no resource" << std::endl;
+    std::cout << "bjlbjl OtlpRecordable::ProtoResource no resource!" << std::endl;
   }
+  std::cout << "bjlbjl OtlpRecordable::ProtoResource Print" << std::endl;
+  Print();
+  std::cout << "bjlbjl OtlpRecordable::ProtoResource print proto" << std::endl;
+  std::cout << ConvertToString(proto) << std::endl;
 
   return proto;
 }
@@ -257,7 +311,12 @@ proto::common::v1::InstrumentationLibrary OtlpRecordable::GetProtoInstrumentatio
 
 void OtlpRecordable::SetResource(const opentelemetry::sdk::resource::Resource &resource) noexcept
 {
-  std::cout << "OtlpRecordable::SetResource resource" << std::endl;
+  std::cout << "bjlbjl OtlpRecordable::SetResource resource to address " << &resource << std::endl;
+  for (auto& kv : resource.GetAttributes()) {
+    std::cout << "bjlbjl OtlpRecordable::SetResource printing attributes" << std::endl;
+    if (nostd::holds_alternative<std::string>(kv.second))
+      std::cout << " " << kv.first + " " + nostd::get<std::string>(kv.second) << std::endl;
+  }
   resource_ = &resource;
 };
 
@@ -266,6 +325,8 @@ void OtlpRecordable::SetAttribute(nostd::string_view key,
 {
   auto *attribute = span_.add_attributes();
   PopulateAttribute(attribute, key, value);
+  std::cout << "bjlbjl printing after OtlpRecordable::SetAttribute" << std::endl;
+  Print();
 }
 
 void OtlpRecordable::AddEvent(nostd::string_view name,

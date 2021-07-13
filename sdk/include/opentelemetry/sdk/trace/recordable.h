@@ -39,6 +39,8 @@ class Recordable
 public:
   virtual ~Recordable() = default;
 
+  virtual void Print() const {}
+
   /**
    * Set the span context and parent span id
    * @param span_context the span context to set

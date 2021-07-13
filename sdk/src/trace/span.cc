@@ -84,10 +84,11 @@ Span::Span(std::shared_ptr<Tracer> &&tracer,
     return;
   }
   std::cout << "bjlbjl Span::Span non-null recordable "
-	      << IdString(span_context_->trace_id())
-	      << " "
-	      << IdString(span_context_->span_id())
-	      << std::endl;    
+	    << recordable_.get() << " "
+	    << IdString(span_context_->trace_id())
+	    << " "
+	    << IdString(span_context_->span_id())
+	    << std::endl;    
   recordable_->SetName(name);
   recordable_->SetInstrumentationLibrary(tracer_->GetInstrumentationLibrary());
   recordable_->SetIdentity(*span_context_, parent_span_context.IsValid()
@@ -106,6 +107,9 @@ Span::Span(std::shared_ptr<Tracer> &&tracer,
     return true;
   });
 
+  std::cout << "bjlbjl printing recordable in Span::Span before setting " << recordable_.get() << std::endl;
+  recordable_->Print();
+
   recordable_->SetSpanKind(options.kind);
   recordable_->SetStartTime(NowOr(options.start_system_time));
   start_steady_time = NowOr(options.start_steady_time);
@@ -117,6 +121,8 @@ Span::Span(std::shared_ptr<Tracer> &&tracer,
 	      << std::endl;
   }
   recordable_->SetResource(resource);
+  std::cout << "bjlbjl printing recordable in Span::Span after setting resource " << recordable_.get() << std::endl;
+  recordable_->Print();
   tracer_->GetProcessor().OnStart(*recordable_, parent_span_context);
 }
 
@@ -210,7 +216,8 @@ void Span::End(const trace_api::EndSpanOptions &options) noexcept
     return;
   }
 
-  std::cout << "bjlbjl Span::End null recordable "
+  std::cout << "bjlbjl Span::End non-null recordable "
+	    << recordable_.get() << " "
 	    << IdString(span_context_->trace_id())
 	    << " "
 	    << IdString(span_context_->span_id())

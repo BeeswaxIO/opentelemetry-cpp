@@ -96,11 +96,11 @@ public:
       auto processor   = node->value_.get();
       auto &recordable = multi_recordable->GetRecordable(*processor);
       if (recordable != nullptr) {
-	std::cout << "bjlbjl non-null recordable in MultiSpanProcessor::OnStart " << IdString(parent_context.trace_id()) << " " << IdString(parent_context.span_id()) << std::endl;
+	std::cout << "bjlbjl non-null recordable in MultiSpanProcessor::OnStart parent " << IdString(parent_context.trace_id()) << " " << IdString(parent_context.span_id()) << std::endl;
         processor->OnStart(*recordable, parent_context);
       }
       else {
-	std::cout << "bjlbjl null recordable in MultiSpanProcessor::OnStart "
+	std::cout << "bjlbjl null recordable in MultiSpanProcessor::OnStart parent "
 		  << IdString(parent_context.trace_id()) << " " << IdString(parent_context.span_id()) << std::endl;
       }
       node = node->next_;
