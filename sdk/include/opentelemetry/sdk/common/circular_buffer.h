@@ -5,7 +5,9 @@
 
 #include <atomic>
 #include <cstdint>
+#include <functional>
 #include <memory>
+#include <iostream>
 
 #include "opentelemetry/sdk/common/atomic_unique_ptr.h"
 #include "opentelemetry/sdk/common/circular_buffer_range.h"
@@ -24,6 +26,8 @@ template <class T>
 class CircularBuffer
 {
 public:
+  using PrinterCallback = std::function<void(const T&)>;
+
   explicit CircularBuffer(size_t max_size)
       : data_{new AtomicUniquePtr<T>[max_size + 1]}, capacity_{max_size + 1}
   {}
@@ -79,8 +83,16 @@ public:
    * @param ptr a pointer to the element to add
    * @return true if the element was successfully added; false, otherwise.
    */
-  bool Add(std::unique_ptr<T> &ptr) noexcept
+  bool Add(std::unique_ptr<T> &ptr,
+	   PrinterCallback callback = [](const T&){}) noexcept
   {
+    std::cout << "bjlbjl CircularBuffer::Add Calling printer callback on "
+	      << ptr.get() << std::endl;
+    if (auto p = ptr.get()) {
+      callback(*p);
+    }
+    else std::cout << "bjlbjl CircularBuffer::Add null" << std::endl;
+
     while (true)
     {
       uint64_t tail = tail_;
@@ -106,10 +118,21 @@ public:
           return true;
         }
 
+	std::cout << "bjlbjl CircularBuffer::Add unlikely section! "
+		  << ptr.get() << std::endl;
+
         // If we reached this point (unlikely), it means that between the last
         // iteration elements were added and then consumed from the circular
         // buffer, so we undo the swap and attempt to add again.
         data_[head_index].Swap(ptr);
+
+	std::cout << "bjlbjl CircularBuffer::Add printing after unlikely swap" << std::endl;
+	if (auto p = data_[head_index].Get()) {
+	  callback(*p);
+	}
+	else {
+	  std::cout << "bjlbjl CircularBuffer::Add could null data head index" << std::endl;
+	}
       }
     }
     return true;
@@ -120,7 +143,10 @@ public:
    *
    * Note: This method must only be called from the consumer thread.
    */
-  void Clear() noexcept { Consume(size()); }
+  void Clear() noexcept {
+    std::cout << "bjlbjl CircularBuffer::Clear()" << std::endl;
+    Consume(size());
+  }
 
   /**
    * @return the maximum number of bytes that can be stored in the buffer.

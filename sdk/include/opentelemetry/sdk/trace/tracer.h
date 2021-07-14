@@ -26,6 +26,12 @@ using namespace opentelemetry::sdk::instrumentationlibrary;
 class Tracer final : public trace_api::Tracer, public std::enable_shared_from_this<Tracer>
 {
 public:
+  ~Tracer() {
+    std::cout << "bjlbjl tracer destructor "
+	      << this
+	      << " " << &(GetResource())
+	      << std::endl;
+  }
   /** Construct a new Tracer with the given context pipeline. */
   explicit Tracer(std::shared_ptr<sdk::trace::TracerContext> context,
                   std::unique_ptr<InstrumentationLibrary> instrumentation_library =

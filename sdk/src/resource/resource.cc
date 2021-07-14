@@ -19,10 +19,14 @@ const std::string kTelemetrySdkVersion   = "telemetry.sdk.version";
 const std::string kServiceName           = "service.name";
 const std::string kProcessExecutableName = "process.executable.name";
 
-Resource::Resource(const ResourceAttributes &attributes) noexcept : attributes_(attributes) {}
+Resource::Resource(const ResourceAttributes &attributes) noexcept : attributes_(attributes) {
+  std::cout << "bjlbjl Resource constructor " << this << std::endl;
+}
 
 Resource Resource::Merge(const Resource &other) noexcept
 {
+  std::cout << "bjlbjl Resource::Merge " << this << std::endl;
+
   ResourceAttributes merged_resource_attributes(other.attributes_);
   merged_resource_attributes.insert(attributes_.begin(), attributes_.end());
   return Resource(merged_resource_attributes);

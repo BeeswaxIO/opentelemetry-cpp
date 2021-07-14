@@ -22,6 +22,11 @@ namespace otlp
 class OtlpRecordable final : public sdk::trace::Recordable
 {
 public:
+  ~OtlpRecordable() {
+    std::cout << "bjlbjl OtlpRecordable destructor: " << this << std::endl;
+    Print();
+  }
+
   const proto::trace::v1::Span &span() const noexcept { return span_; }
 
   /** Dynamically converts the resource of this span into a proto. */

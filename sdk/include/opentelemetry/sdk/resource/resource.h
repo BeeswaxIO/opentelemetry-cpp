@@ -11,6 +11,7 @@
 #include "opentelemetry/sdk/version/version.h"
 #include "opentelemetry/version.h"
 
+#include <iostream>
 #include <memory>
 #include <sstream>
 #include <unordered_map>
@@ -27,6 +28,10 @@ class Resource
 {
 public:
   Resource(const Resource &) = default;
+
+  ~Resource() {
+    std::cout << "bjlbjl resource destructor: " << this << std::endl;
+  }
 
   const ResourceAttributes &GetAttributes() const noexcept;
 

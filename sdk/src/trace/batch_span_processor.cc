@@ -72,7 +72,11 @@ void BatchSpanProcessor::OnEnd(std::unique_ptr<Recordable> &&span) noexcept
     return;
   }
 
-  if (buffer_.Add(span) == false)
+  if (buffer_.Add(span,
+		  [](const Recordable& recordable){
+		    std::cout << "bjlbjl lambda" << std::endl;
+		    recordable.Print();
+		  }) == false)
   {
     std::cout << "bjlbjl BatchSpanProcessor::OnEnd add span false "
 	      << span.get()
@@ -195,15 +199,22 @@ void BatchSpanProcessor::Export(const bool was_force_flush_called)
                   [&](CircularBufferRange<AtomicUniquePtr<Recordable>> range) noexcept {
                     range.ForEach([&](AtomicUniquePtr<Recordable> &ptr) {
                       std::unique_ptr<Recordable> swap_ptr = std::unique_ptr<Recordable>(nullptr);
+		      if (auto p = ptr.Get()) {
+			std::cout << "bjlbjl printing ptr from Consume" << std::endl;
+			p->Print();
+		      }
                       ptr.Swap(swap_ptr);
                       spans_arr.push_back(std::unique_ptr<Recordable>(swap_ptr.release()));
-		      if (auto& bk = spans_arr.back()) {
-			  std::cout << "bjlbjl printing from Consume "
+		      if (auto &bk = spans_arr.back()) {
+			  std::cout << "bjlbjl printing spans_arr.back() from Consume "
 				    << bk.get()
 				    << std::endl;
 			  bk->Print();
 		      } else {
 			std::cout << "bjlbjl null back in Consume!" << std::endl;
+		      }
+		      if (ptr.Get()) {
+			std::cout << "bjlbjl should have been null but is not in ForEach" << std::endl;
 		      }
                       return true;
                     });
